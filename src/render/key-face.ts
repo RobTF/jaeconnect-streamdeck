@@ -3,6 +3,10 @@
  */
 export const tones = {
     mint: "#5fe0b4",
+    // The website's energy meters in its dark theme: electric is teal-green (--jc-teal), fuel is blue
+    // (--jc-graphic-cool).
+    electric: "#12a27e",
+    fuel: "#4aa3ec",
     amber: "#ffc94d",
     heat: "#ffa94d",
     cool: "#6cc4ff",

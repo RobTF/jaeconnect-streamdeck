@@ -123,7 +123,7 @@ export const globalFields: Field[] = [
         placeholder: "jc_pat_…",
         help: "Create one on the jaeconnect website under Apps and tokens, with Control on the cars to use here.",
     },
-    { kind: "text", key: "baseUrl", label: "Address", placeholder: "https://jaeconnect.com", help: "Leave blank for jaeconnect.com." },
+    { kind: "text", key: "baseUrl", label: "Address", placeholder: "https://www.jaeconnect.com", help: "Leave blank for jaeconnect.com." },
     { kind: "heading", label: "Units" },
     { kind: "select", key: "distance", label: "Distance", default: "mi", options: [{ value: "mi", label: "Miles" }, { value: "km", label: "Kilometres" }] },
     { kind: "select", key: "pressure", label: "Tyre pressure", default: "psi", options: [{ value: "psi", label: "psi" }, { value: "bar", label: "bar" }, { value: "kpa", label: "kPa" }] },

@@ -89,7 +89,7 @@ class CarHub {
             }
 
             const refused = error instanceof JaeConnectError && (error.status === 401 || error.status === 403);
-            this.#set("error", refused ? "jaeconnect refused the token. Check it on the settings page." : message(error));
+            this.#set("error", refused ? `jaeconnect refused the token (${error.status}: ${error.message}). Check it on the settings page.` : message(error));
             if (!refused) {
                 this.#retry = setTimeout(() => {
                     this.#configured = "";
@@ -113,6 +113,7 @@ class CarHub {
             return;
         }
 
+        streamDeck.logger.info(`Connected to ${settings.baseUrl}: ${vehicles.length} car${vehicles.length === 1 ? "" : "s"} (${vehicles.map((x) => `${x.nickname}, ${x.supported_commands.length} commands`).join("; ")}).`);
         this.#set("connected");
         await Promise.all(vehicles.map((x) => this.refresh(x.id)));
 

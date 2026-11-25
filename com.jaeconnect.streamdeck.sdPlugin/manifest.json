@@ -26,7 +26,7 @@
             "Name": "Charging",
             "UUID": "com.jaeconnect.streamdeck.charging",
             "Icon": "imgs/actions/charging/icon",
-            "Tooltip": "Battery percent, charger power and time to full. Press to start or stop charging.",
+            "Tooltip": "Battery percent, charger power and time to full, for cars that plug in. On cars with charge control, press to start or stop charging.",
             "Controllers": ["Keypad"],
             "States": [{ "Image": "imgs/actions/charging/key", "ShowTitle": false }],
             "SupportedInMultiActions": false
@@ -98,15 +98,15 @@
             "Name": "Seats dial",
             "UUID": "com.jaeconnect.streamdeck.seats-dial",
             "Icon": "imgs/actions/seats-dial/icon",
-            "Tooltip": "Seat heating and cooling. Turn to choose a level, then press to send it; tap for the next seat.",
+            "Tooltip": "Seat heating and cooling. Turn right to heat or left to cool, then press to send it; tap for the next seat.",
             "Controllers": ["Encoder"],
             "Encoder": {
                 "layout": "layouts/panel.json",
                 "Icon": "imgs/actions/seats-dial/dial",
                 "TriggerDescription": {
-                    "Rotate": "Choose a level (not sent yet)",
-                    "Push": "Send the level",
-                    "Touch": "Next seat, heating then cooling"
+                    "Rotate": "Right heats, left cools (not sent yet)",
+                    "Push": "Send it",
+                    "Touch": "Next seat"
                 }
             },
             "States": [{ "Image": "imgs/actions/seats-dial/dial", "ShowTitle": false }],

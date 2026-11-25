@@ -1,8 +1,9 @@
 import type { OpeningPosition } from "../api/types.ts";
-import { type CarContext, climateLimits, currentPosition, distance, type Opening, positions, pressure, type SeatTarget, seatLevel, seatName } from "../car.ts";
+import { type CarContext, climateLimits, currentPosition, distance, maxSeatLevel, type Opening, positions, pressure, seatName, type SeatOption, seatSetting } from "../car.ts";
 import type { Connection } from "../hub.ts";
 import { formatTemp } from "../keys/key-views.ts";
-import type { PanelView } from "../render/panel-face.ts";
+import { icons } from "../render/icons.ts";
+import type { PanelLine, PanelView } from "../render/panel-face.ts";
 
 /**
  * What a panel shows while the plugin isn't connected to jaeconnect.
@@ -56,25 +57,32 @@ export function climatePanel(ctx: CarContext): PanelView {
 }
 
 /**
- * The Seats dial: the seat, heating or cooling, its level, and a level chosen but not sent yet.
+ * The Seats dial: the seat, its heating or cooling on one scale (cooling left, heating right), and a setting chosen
+ * but not sent yet.
  * @param ctx The car.
- * @param target The seat and mode shown.
- * @param pick The level chosen with the dial, when it differs from the car's.
+ * @param option The seat shown.
+ * @param pick The setting chosen with the dial (see {@link seatSetting}), when it differs from the car's.
  * @returns The view.
  */
-export function seatsPanel(ctx: CarContext, target: SeatTarget, pick: number | undefined): PanelView {
-    const level = seatLevel(ctx.status, target);
-    const pending = pick !== undefined && pick !== level;
-    const shown = pending ? pick : level;
+export function seatsPanel(ctx: CarContext, option: SeatOption, pick: number | undefined): PanelView {
+    const current = seatSetting(ctx.status, option.seat);
+    const pending = pick !== undefined && pick !== current;
+    const shown = pending ? pick : current;
+    // Off, the line under the scale names its ends: cooling to the left, heating to the right.
+    const ends: PanelLine = {
+        kind: "ends",
+        left: option.cool ? { text: "Cool", tone: "cool" } : undefined,
+        right: option.heat ? { text: "Heat", tone: "heat" } : undefined,
+    };
     return {
-        label: target.mode === "heat" ? "Seat heating" : "Seat cooling",
-        tag: level > 0 ? { text: `L${level}`, tone: "mint" } : { text: "OFF", tone: "grey" },
+        label: "Seats",
+        tag: current > 0 ? { text: `HEAT ${current}`, tone: "heat" } : current < 0 ? { text: `COOL ${-current}`, tone: "cool" } : { text: "OFF", tone: "grey" },
         lines: [
-            { kind: "text", text: seatName(target.seat), font: "name", tone: "white" },
-            { kind: "pips", count: 3, filled: shown, tone: target.mode === "heat" ? "heat" : "cool", pending },
-            { kind: "text", text: level > 0 ? `Level ${level} · ${ctx.durationMinutes} min` : "Turn to choose a level", font: "body" },
+            { kind: "text", text: seatName(option.seat), font: "name", tone: "white" },
+            { kind: "scale", value: shown, levels: maxSeatLevel, cool: option.cool, heat: option.heat, pending },
+            current === 0 ? ends : { kind: "text", text: `${current > 0 ? "Heating" : "Cooling"} · ${ctx.durationMinutes} min`, font: "body" },
         ],
-        banner: pending ? { text: shown === 0 ? "Press to turn off" : `Press to set level ${shown}`, tone: "amber" } : undefined,
+        banner: pending ? { text: shown > 0 ? `Press to heat at ${shown}` : shown < 0 ? `Press to cool at ${-shown}` : "Press to turn off", tone: "amber" } : undefined,
     };
 }
 
@@ -121,13 +129,16 @@ export function energyPanel(ctx: CarContext, page: EnergyPage): PanelView {
             const state = { unplugged: "UNPLUGGED", plugged_in: "PLUGGED IN", charging: "CHARGING", complete: "FULL" }[charging?.state ?? "unplugged"];
             const range = distance(s?.range_km ?? null, s?.range_miles ?? null, ctx.distance);
             const limit = charging?.target_percent;
+            // As on the website: electric in green, its bolt and bar lit mint while charging.
+            const live = charging?.state === "charging";
             return {
                 label: "Battery",
-                tag: { text: state, tone: charging?.state === "charging" || charging?.state === "complete" ? "mint" : "grey" },
+                icon: { elements: icons.bolt, tone: live ? "mint" : "electric" },
+                tag: { text: state, tone: live || charging?.state === "complete" ? "mint" : "grey" },
                 lines: [
                     { kind: "text", text: `${s?.battery_percent ?? 0}%`, font: "big", tone: "white" },
                     { kind: "text", text: [range ? `${range} electric` : undefined, limit ? `limit ${limit}%` : undefined].filter(Boolean).join(" · "), font: "body" },
-                    { kind: "bar", share: (s?.battery_percent ?? 0) / 100, tone: charging?.state === "charging" ? "mint" : "white", mark: limit ? limit / 100 : undefined },
+                    { kind: "bar", share: (s?.battery_percent ?? 0) / 100, tone: live ? "mint" : "electric", mark: limit ? limit / 100 : undefined },
                 ],
             };
         }
@@ -135,10 +146,11 @@ export function energyPanel(ctx: CarContext, page: EnergyPage): PanelView {
             const range = distance(s?.fuel_range_km ?? null, s?.fuel_range_miles ?? null, ctx.distance);
             return {
                 label: "Fuel",
+                icon: { elements: icons.fuel, tone: "fuel" },
                 lines: [
                     { kind: "text", text: `${s?.fuel_percent ?? 0}%`, font: "big", tone: "white" },
                     { kind: "text", text: range ? `${range} on fuel` : "Range not reported", font: "body" },
-                    { kind: "bar", share: (s?.fuel_percent ?? 0) / 100, tone: (s?.fuel_percent ?? 0) < 15 ? "red" : "white" },
+                    { kind: "bar", share: (s?.fuel_percent ?? 0) / 100, tone: "fuel" },
                 ],
             };
         }

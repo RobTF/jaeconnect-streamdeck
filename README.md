@@ -13,14 +13,14 @@ heated steering wheel shows that key as "Not on this car" instead of a key that 
 |---|---|---|---|
 | **Lock** (key) | Locked or unlocked | Lock | Hold 1 s: unlock |
 | **Climate** (key) | Off and the temperature it starts at, or the car's set temperature while running | Start at the Climate dial's temperature, or stop | – |
-| **Charging** (key) | Battery %, charger power and time to full | Start or stop charging | – |
+| **Charging** (key) | Battery %, charger power and time to full, on cars that plug in (not petrol, diesel or self-charging hybrids) | Start or stop charging, on cars with charge control | – |
 | **Boot** (key) | Open or shut | Close | Hold 1 s: open |
 | **Demister** (key) | Windscreen or rear window (a setting), on or off | Turn on or off | – |
 | **Heated wheel** (key) | On or off, for cars that have one | Turn on or off | – |
 | **Signal** (key) | – | Flash the lights and sound the horn | – |
 | **Car** (key) | Name, awake or asleep, last report | Ask the car for a fresh status | Hold 1 s while asleep: wake it |
 | **Climate dial** | Temperature and run time | Start or stop climate | Turn: temperature (sent at once while running). Tap: run time |
-| **Seats dial** | Seat, heating or cooling, level | Send the chosen level | Turn: choose a level (not sent until you press; dropped after 10 s). Tap: next seat |
+| **Seats dial** | Seat, and its heating or cooling on one scale | Send the chosen setting | Turn right from off to heat (levels 1–3), left to cool; not sent until you press, and dropped after 10 s. Tap: next seat |
 | **Energy dial** | Battery, fuel, tyres or odometer | Ask the car for a fresh status | Turn or tap: next page |
 | **Windows and sunroof dial** | Closed, vented or open | Send the chosen position | Turn: choose a position (not sent until you press; dropped after 10 s). Tap: windows or sunroof |
 

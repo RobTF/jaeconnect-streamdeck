@@ -7,9 +7,11 @@ import type { Command, CommandBody, CommandName, Vehicle, VehicleStatus } from "
 export const pluginVersion = "0.1.0";
 
 /**
- * The jaeconnect service, used when the settings don't name another.
+ * The jaeconnect service, used when the settings don't name another. It has to be www: the bare domain redirects
+ * there, and a request that follows a redirect to another host loses its Authorization header, so jaeconnect would
+ * answer 401.
  */
-export const defaultBaseUrl = "https://jaeconnect.com";
+export const defaultBaseUrl = "https://www.jaeconnect.com";
 
 /**
  * Sent with every request.
@@ -45,13 +47,14 @@ export class JaeConnectError extends Error {
 }
 
 /**
- * Tidies an API address: blank becomes the jaeconnect service, and a trailing slash is dropped.
+ * Tidies an API address: blank or the bare jaeconnect.com becomes the jaeconnect service, and a trailing slash is
+ * dropped.
  * @param url The address as typed.
  * @returns The address to call.
  */
 export function normaliseBaseUrl(url: string | undefined): string {
     const trimmed = (url ?? "").trim().replace(/\/+$/, "");
-    return trimmed === "" ? defaultBaseUrl : trimmed;
+    return trimmed === "" || /^(https?:\/\/)?jaeconnect\.com$/i.test(trimmed) ? defaultBaseUrl : trimmed;
 }
 
 /**

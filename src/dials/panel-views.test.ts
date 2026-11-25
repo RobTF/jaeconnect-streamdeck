@@ -15,18 +15,33 @@ describe("Climate dial", () => {
 });
 
 describe("Seats dial", () => {
-    it("asks for a press when a level is chosen but not sent", () => {
-        const view = seatsPanel(testContext(), { seat: "driver", mode: "heat" }, 2);
-        assert.equal(view.banner?.text, "Press to set level 2");
-        assert.deepEqual(view.lines[1], { kind: "pips", count: 3, filled: 2, tone: "heat", pending: true });
+    const both = { seat: "driver" as const, heat: true, cool: true };
+
+    it("asks for a press when heating is chosen but not sent", () => {
+        const view = seatsPanel(testContext(), both, 2);
+        assert.equal(view.banner?.text, "Press to heat at 2");
+        assert.deepEqual(view.lines[1], { kind: "scale", value: 2, levels: 3, cool: true, heat: true, pending: true });
     });
 
-    it("shows the car's level when nothing is waiting", () => {
+    it("asks for a press when cooling is chosen", () => {
+        assert.equal(seatsPanel(testContext(), both, -1).banner?.text, "Press to cool at 1");
+    });
+
+    it("shows the car's cooling when nothing is waiting", () => {
         const ctx = testContext({ seats: { driver: null, passenger: { heat_level: 0, vent_level: 1 }, rear_left: null, rear_right: null } });
-        const view = seatsPanel(ctx, { seat: "passenger", mode: "vent" }, undefined);
+        const view = seatsPanel(ctx, { seat: "passenger", heat: true, cool: true }, undefined);
         assert.equal(view.banner, undefined);
-        assert.equal(view.label, "Seat cooling");
-        assert.deepEqual(view.tag, { text: "L1", tone: "mint" });
+        assert.deepEqual(view.tag, { text: "COOL 1", tone: "cool" });
+        assert.deepEqual(view.lines[2], { kind: "text", text: "Cooling · 15 min", font: "body" });
+    });
+
+    it("names the cool and heat ends when off", () => {
+        assert.deepEqual(seatsPanel(testContext(), both, undefined).lines[2], { kind: "ends", left: { text: "Cool", tone: "cool" }, right: { text: "Heat", tone: "heat" } });
+    });
+
+    it("leaves out the end a seat can't do", () => {
+        const line = seatsPanel(testContext(), { seat: "passenger", heat: true, cool: false }, undefined).lines[2];
+        assert.deepEqual(line, { kind: "ends", left: undefined, right: { text: "Heat", tone: "heat" } });
     });
 });
 

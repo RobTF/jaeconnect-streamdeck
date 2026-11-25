@@ -48,6 +48,17 @@ export function supports(vehicle: Vehicle, command: CommandName): boolean {
 }
 
 /**
+ * Whether the car plugs in to charge: an EV, plug-in hybrid or range extender, or a car whose powertrain the service
+ * doesn't give (shown rather than hidden, as most cars jaeconnect knows plug in). Petrol, diesel and self-charging
+ * hybrids don't.
+ * @param vehicle The car.
+ * @returns Whether it does.
+ */
+export function pluggable(vehicle: Vehicle): boolean {
+    return vehicle.powertrain === null || ["ev", "phev", "erev"].includes(vehicle.powertrain);
+}
+
+/**
  * The climate control's limits, or jaeconnect's defaults (16–30 °C in whole degrees) when the car doesn't say.
  * @param vehicle The car.
  * @returns The limits.
@@ -95,37 +106,77 @@ export function runTime(vehicle: Vehicle, chosen: number | undefined): number {
 }
 
 /**
- * Heating or cooling.
+ * The highest seat heating or cooling level the dial offers.
  */
-export type SeatMode = "heat" | "vent";
+export const maxSeatLevel = 3;
 
 /**
- * A seat and what to do to it, as the Seats dial steps through them.
+ * A seat the Seats dial offers, and whether it can be heated, cooled or both.
  */
-export type SeatTarget = { seat: SeatName; mode: SeatMode };
+export type SeatOption = { seat: SeatName; heat: boolean; cool: boolean };
 
 /**
- * The seats the Seats dial offers: heating on each heated seat, then cooling on each ventilated one. A list the car
- * service can't give (`null`) offers the front seats.
+ * The seats the Seats dial offers, front first: each seat that can be heated or cooled. A list the car service
+ * can't give (`null`) offers the front seats.
  * @param vehicle The car.
- * @returns The targets, in the order a tap steps through them.
+ * @returns The seats, in the order a tap steps through them.
  */
-export function seatTargets(vehicle: Vehicle): SeatTarget[] {
+export function seatOptions(vehicle: Vehicle): SeatOption[] {
     const front: SeatName[] = ["driver", "passenger"];
-    const heat = supports(vehicle, "seat_heat") ? (vehicle.heated_seats ?? front) : [];
-    const vent = supports(vehicle, "seat_vent") ? (vehicle.ventilated_seats ?? front) : [];
-    return [...heat.map((seat) => ({ seat, mode: "heat" as const })), ...vent.map((seat) => ({ seat, mode: "vent" as const }))];
+    const heated = supports(vehicle, "seat_heat") ? (vehicle.heated_seats ?? front) : [];
+    const cooled = supports(vehicle, "seat_vent") ? (vehicle.ventilated_seats ?? front) : [];
+    return (["driver", "passenger", "rear_left", "rear_right"] as const)
+        .map((seat) => ({ seat, heat: heated.includes(seat), cool: cooled.includes(seat) }))
+        .filter((x) => x.heat || x.cool);
 }
 
 /**
- * A seat's current level for a mode, 0 when the car doesn't say.
+ * A seat's heating and cooling as one number, the way the Seats dial turns it: heating levels above zero, cooling
+ * levels below (-2 is cooling at level 2), 0 for off. Heating wins if the car reports both.
  * @param status The status.
- * @param target The seat and mode.
- * @returns The level.
+ * @param seat The seat.
+ * @returns The setting, 0 when the car doesn't say.
  */
-export function seatLevel(status: VehicleStatus | undefined, target: SeatTarget): number {
-    const seat = status?.seats?.[target.seat];
-    return (target.mode === "heat" ? seat?.heat_level : seat?.vent_level) ?? 0;
+export function seatSetting(status: VehicleStatus | undefined, seat: SeatName): number {
+    const levels = status?.seats?.[seat];
+    const heat = levels?.heat_level ?? 0;
+    const vent = levels?.vent_level ?? 0;
+    return heat > 0 ? heat : vent > 0 ? -vent : 0;
+}
+
+/**
+ * Clamps a seat setting to what the seat can do: no cooling on a seat that only heats, and the other way round.
+ * @param option The seat.
+ * @param setting The setting.
+ * @returns The setting it can take.
+ */
+export function clampSeatSetting(option: SeatOption, setting: number): number {
+    return Math.min(option.heat ? maxSeatLevel : 0, Math.max(option.cool ? -maxSeatLevel : 0, setting));
+}
+
+/**
+ * The commands that take a seat from one setting to another. Going from heating to cooling (or back) turns the old
+ * one off first, so the car isn't left doing both.
+ * @param seat The seat.
+ * @param from Its setting now.
+ * @param to The setting wanted.
+ * @returns The commands, in order, with their seat and level.
+ */
+export function seatCommands(seat: SeatName, from: number, to: number): { command: "seat_heat" | "seat_vent"; seat: SeatName; level: number }[] {
+    const steps: { command: "seat_heat" | "seat_vent"; seat: SeatName; level: number }[] = [];
+    if (from > 0 && to <= 0) {
+        steps.push({ command: "seat_heat", seat, level: 0 });
+    } else if (from < 0 && to >= 0) {
+        steps.push({ command: "seat_vent", seat, level: 0 });
+    }
+
+    if (to > 0) {
+        steps.push({ command: "seat_heat", seat, level: to });
+    } else if (to < 0) {
+        steps.push({ command: "seat_vent", seat, level: -to });
+    }
+
+    return steps;
 }
 
 /**

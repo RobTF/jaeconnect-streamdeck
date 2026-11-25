@@ -1,8 +1,8 @@
 import { action } from "@elgato/streamdeck";
 
-import type { CommandName } from "../api/types.ts";
+import type { CommandName, Vehicle } from "../api/types.ts";
 import type { CarContext } from "../car.ts";
-import { supports } from "../car.ts";
+import { pluggable, supports } from "../car.ts";
 import { hub } from "../hub.ts";
 import { icons } from "../render/icons.ts";
 import type { KeyFace } from "../render/key-face.ts";
@@ -70,16 +70,21 @@ export class ClimateKey extends CarKey {
 }
 
 /**
- * Battery percent and charging. A press starts or stops charging.
+ * Battery percent and charging, on cars that plug in. A press starts or stops charging on cars with charge control
+ * (typically EVs); on others, such as plug-in hybrids, the key only shows the battery.
  */
 @action({ UUID: "com.jaeconnect.streamdeck.charging" })
 export class ChargingKey extends CarKey {
     protected readonly name = "Charging";
     protected readonly icon = icons.bolt;
-    protected readonly commands: CommandName[] = ["start_charging", "stop_charging"];
+    protected readonly commands: CommandName[] = [];
 
     constructor() {
         super();
+    }
+
+    protected override supported(vehicle: Vehicle): boolean {
+        return pluggable(vehicle);
     }
 
     protected face(ctx: CarContext): KeyFace {
@@ -87,6 +92,11 @@ export class ChargingKey extends CarKey {
     }
 
     protected async press(key: KeyHandle, ctx: CarContext): Promise<void> {
+        if (!supports(ctx.vehicle, "start_charging") && !supports(ctx.vehicle, "stop_charging")) {
+            this.hint(key, "Can't control");
+            return;
+        }
+
         switch (ctx.status?.charging?.state) {
             case "charging":
                 await this.run(key, ctx, "stop_charging");

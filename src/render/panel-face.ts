@@ -8,6 +8,8 @@ export type PanelLine =
     | { kind: "bar"; share: number; tone: Tone; mark?: number }
     | { kind: "chips"; items: string[]; on?: string; pick?: string }
     | { kind: "pips"; count: number; filled: number; tone: Tone; pending?: boolean }
+    | { kind: "scale"; value: number; levels: number; cool: boolean; heat: boolean; pending?: boolean }
+    | { kind: "ends"; left?: { text: string; tone: Tone }; right?: { text: string; tone: Tone } }
     | { kind: "pairs"; pairs: [string, string][] };
 
 /**
@@ -18,6 +20,11 @@ export type PanelView = {
      * The small label at the top left.
      */
     label: string;
+    /**
+     * An icon before the label (see icons.ts), with the label in the same colour, as the website's energy meters
+     * have.
+     */
+    icon?: { elements: string; tone: Tone };
     /**
      * A tag at the top right, e.g. ON.
      */
@@ -49,7 +56,10 @@ export function drawPanel(view: PanelView): string {
     const parts = [
         `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
         `<rect width="${width}" height="${height}" fill="#07090a"/>`,
-        `<text x="${left}" y="16" font-family="Segoe UI, sans-serif" font-weight="700" font-size="10" letter-spacing="1.2" fill="#8b9693">${escape(view.label.toUpperCase())}</text>`,
+        view.icon
+            ? `<g transform="translate(${left} 5) scale(0.5)" color="${tones[view.icon.tone]}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${view.icon.elements}</g>`
+            : "",
+        `<text x="${view.icon ? left + 16 : left}" y="16" font-family="Segoe UI, sans-serif" font-weight="700" font-size="10" letter-spacing="1.2" fill="${view.icon ? tones[view.icon.tone] : "#8b9693"}">${escape(view.label.toUpperCase())}</text>`,
         view.tag ? tag(view.tag.text, tones[view.tag.tone]) : "",
     ];
 
@@ -124,6 +134,44 @@ function draw(line: PanelLine, y: number): [string, number] {
                     : `<rect x="${x}" y="${y + 3}" width="${w}" height="7" rx="2" fill="${tones[line.tone]}"/>`;
             });
             return [pips.join(""), 14];
+        }
+
+        case "scale": {
+            // Cooling to the left of a centre mark and heating to the right, each filling outwards from the centre,
+            // the way the dial turns: anticlockwise cools, clockwise heats. Every pill takes its side's colour: faint
+            // when off, outlined when chosen but not sent, filled when on. A side the seat can't do is left out.
+            const w = 22;
+            const gap = 4;
+            const centre = (left + right) / 2;
+            const pip = (x: number, lit: boolean, tone: Tone, available: boolean): string => {
+                if (!available) {
+                    return "";
+                }
+
+                if (!lit) {
+                    return `<rect x="${x.toFixed(1)}" y="${y + 3}" width="${w}" height="7" rx="2" fill="${tones[tone]}" fill-opacity="0.16"/>`;
+                }
+
+                return line.pending
+                    ? `<rect x="${(x + 0.75).toFixed(1)}" y="${y + 3.75}" width="${w - 1.5}" height="5.5" rx="2" fill="none" stroke="${tones[tone]}" stroke-width="1.5"/>`
+                    : `<rect x="${x.toFixed(1)}" y="${y + 3}" width="${w}" height="7" rx="2" fill="${tones[tone]}"/>`;
+            };
+            const parts = [`<rect x="${centre - 1}" y="${y}" width="2" height="13" rx="1" fill="#4a5250"/>`];
+            for (let level = 1; level <= line.levels; level++) {
+                const offset = 5 + (level - 1) * (w + gap);
+                parts.push(pip(centre - offset - w, line.value <= -level, "cool", line.cool));
+                parts.push(pip(centre + offset, line.value >= level, "heat", line.heat));
+            }
+
+            return [parts.join(""), 16];
+        }
+
+        case "ends": {
+            // A word at each end of the line, e.g. which way the Seats dial cools and heats.
+            const font = fonts.body;
+            const text = (x: number, anchor: string, end: { text: string; tone: Tone } | undefined): string =>
+                end ? `<text x="${x}" y="${y + font.size - 2}" text-anchor="${anchor}" font-family="Segoe UI, sans-serif" font-weight="600" font-size="${font.size}" fill="${tones[end.tone]}">${escape(end.text)}</text>` : "";
+            return [text(left, "start", line.left) + text(right, "end", line.right), font.height];
         }
 
         default: {

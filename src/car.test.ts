@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { ago, clampTemperature, currentPosition, distance, openings, positions, pressure, runTime, seatTargets, shortError, sunroofClosesFirst } from "./car.ts";
+import { ago, clampSeatSetting, clampTemperature, currentPosition, distance, openings, pluggable, positions, pressure, runTime, seatCommands, seatOptions, seatSetting, shortError, sunroofClosesFirst } from "./car.ts";
 import { testStatus, testVehicle } from "./test-cars.ts";
 
 describe("climate", () => {
@@ -24,23 +24,56 @@ describe("climate", () => {
     });
 });
 
+describe("charging", () => {
+    it("shows on cars that plug in, and on cars that don't say", () => {
+        for (const powertrain of ["ev", "phev", "erev", null]) {
+            assert.equal(pluggable(testVehicle({ powertrain })), true, String(powertrain));
+        }
+    });
+
+    it("hides on petrol, diesel and self-charging hybrids", () => {
+        assert.equal(pluggable(testVehicle({ powertrain: "ice" })), false);
+        assert.equal(pluggable(testVehicle({ powertrain: "hev" })), false);
+    });
+});
+
 describe("seats", () => {
-    it("offers heating then cooling on the listed seats", () => {
-        assert.deepEqual(seatTargets(testVehicle()), [
-            { seat: "driver", mode: "heat" },
-            { seat: "passenger", mode: "heat" },
-            { seat: "driver", mode: "vent" },
-            { seat: "passenger", mode: "vent" },
+    it("offers each seat once, with what it can do", () => {
+        assert.deepEqual(seatOptions(testVehicle({ ventilated_seats: ["driver"] })), [
+            { seat: "driver", heat: true, cool: true },
+            { seat: "passenger", heat: true, cool: false },
         ]);
     });
 
     it("offers the front seats when the car service can't say which", () => {
         const car = testVehicle({ heated_seats: null, supported_commands: ["seat_heat"] });
-        assert.deepEqual(seatTargets(car).map((x) => x.seat), ["driver", "passenger"]);
+        assert.deepEqual(seatOptions(car).map((x) => x.seat), ["driver", "passenger"]);
     });
 
     it("offers nothing without the seat commands", () => {
-        assert.deepEqual(seatTargets(testVehicle({ supported_commands: ["lock"] })), []);
+        assert.deepEqual(seatOptions(testVehicle({ supported_commands: ["lock"] })), []);
+    });
+
+    it("reads heating as positive and cooling as negative", () => {
+        const seats = { driver: { heat_level: 2, vent_level: 0 }, passenger: { heat_level: 0, vent_level: 1 }, rear_left: null, rear_right: null };
+        assert.equal(seatSetting(testStatus({ seats }), "driver"), 2);
+        assert.equal(seatSetting(testStatus({ seats }), "passenger"), -1);
+        assert.equal(seatSetting(testStatus({ seats }), "rear_left"), 0);
+    });
+
+    it("keeps a setting to what the seat can do", () => {
+        assert.equal(clampSeatSetting({ seat: "driver", heat: true, cool: true }, -5), -3);
+        assert.equal(clampSeatSetting({ seat: "driver", heat: true, cool: false }, -1), 0);
+        assert.equal(clampSeatSetting({ seat: "driver", heat: false, cool: true }, 2), 0);
+    });
+
+    it("turns heating off before cooling, and the other way round", () => {
+        assert.deepEqual(seatCommands("driver", 2, -1), [
+            { command: "seat_heat", seat: "driver", level: 0 },
+            { command: "seat_vent", seat: "driver", level: 1 },
+        ]);
+        assert.deepEqual(seatCommands("driver", -3, 0), [{ command: "seat_vent", seat: "driver", level: 0 }]);
+        assert.deepEqual(seatCommands("driver", 1, 3), [{ command: "seat_heat", seat: "driver", level: 3 }]);
     });
 });
 

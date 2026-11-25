@@ -7,7 +7,9 @@ export const icons = {
     lockOpen: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/>',
     fan: '<circle cx="12" cy="12" r="1.8"/><path d="M12 10.2C10.6 6.4 12 3.5 14.6 4c2.2.5 1.7 3.8-1.2 6.1"/><path d="M13.6 13c3.9.9 5.9 3.6 4.2 5.6-1.5 1.7-4.1-.4-4.9-4"/><path d="M10.4 12.9c-2.8 2.8-6.2 2.9-6.9.4-.6-2.2 2.6-3.3 6.3-2.1"/>',
     thermometer: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 10v6"/>',
-    bolt: '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>',
+    // bolt and fuel are the website's own (src/JaeConnect.Web/src/components/Icon.tsx), so the meters match it.
+    bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    fuel: '<path d="M5 21V8l3-4h7a2 2 0 0 1 2 2v15z"/><path d="M3 21h16"/><path d="M8 4V2h5"/><path d="M9 10h5v4H9z"/><path d="M17 9l2.5 2.5V17a1.5 1.5 0 0 0 3 0V8l-2-2"/>',
     car: '<path d="M2.5 16v-3.6l2.4-.9L8 7.5h7.5l3.5 4 2.5.7V16"/><path d="M9.3 16h5.4"/><circle cx="7" cy="16" r="2.2"/><circle cx="17" cy="16" r="2.2"/><path d="M2.5 16h2.2M19.2 16h2.3"/>',
     bootOpen: '<path d="M2.5 16v-3.6l2.4-.9L8 7.5h6"/><path d="M14 7.5 20.5 4"/><path d="M14 7.5v4.6l7.5.4V16"/><path d="M9.3 16h5.4"/><circle cx="7" cy="16" r="2.2"/><circle cx="17" cy="16" r="2.2"/><path d="M2.5 16h2.2M19.2 16h2.3"/>',
     windscreen: '<path d="M3 20c2.6-5.5 15.4-5.5 18 0"/><path d="M8 12.5c-1-1.4 1-2.4 0-3.8s1-2.4 0-3.8M12 11.5c-1-1.4 1-2.4 0-3.8s1-2.4 0-3.8M16 12.5c-1-1.4 1-2.4 0-3.8s1-2.4 0-3.8"/>',

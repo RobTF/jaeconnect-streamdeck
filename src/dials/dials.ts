@@ -1,7 +1,7 @@
 import { action } from "@elgato/streamdeck";
 
 import type { OpeningPosition } from "../api/types.ts";
-import { type CarContext, climateLimits, currentPosition, type Opening, openingCommand, openings, positions, runTimes, seatLevel, seatTargets, sunroofClosesFirst, supports } from "../car.ts";
+import { type CarContext, clampSeatSetting, climateLimits, currentPosition, type Opening, openingCommand, openings, positions, runTimes, seatCommands, type SeatOption, seatOptions, seatSetting, sunroofClosesFirst, supports } from "../car.ts";
 import { hub, message } from "../hub.ts";
 import type { PanelView } from "../render/panel-face.ts";
 import { CarDial, type DialHandle, pickMs } from "./car-dial.ts";
@@ -114,12 +114,13 @@ export class ClimateDial extends CarDial {
 }
 
 /**
- * Seat heating and cooling. Turning chooses a level, which is sent only when the dial is pressed (and dropped after
- * ten seconds without a press); a tap moves to the next seat.
+ * Seat heating and cooling on one scale: turning right from off heats (levels 1 to 3), turning left cools. The
+ * setting chosen is sent only when the dial is pressed (and dropped after ten seconds without a press); a tap moves to
+ * the next seat.
  */
 @action({ UUID: "com.jaeconnect.streamdeck.seats-dial" })
 export class SeatsDial extends CarDial {
-    readonly #targets = new Map<string, number>();
+    readonly #seats = new Map<string, number>();
     readonly #picks = new Picks<number>();
 
     constructor() {
@@ -127,39 +128,45 @@ export class SeatsDial extends CarDial {
     }
 
     protected available(ctx: CarContext): boolean {
-        return seatTargets(ctx.vehicle).length > 0;
+        return seatOptions(ctx.vehicle).length > 0;
     }
 
     protected panel(id: string, ctx: CarContext): PanelView {
-        return seatsPanel(ctx, this.#target(id, ctx), this.#picks.get(id));
+        return seatsPanel(ctx, this.#seat(id, ctx), this.#picks.get(id));
     }
 
     protected turn(dial: DialHandle, ctx: CarContext, ticks: number): void {
-        const level = seatLevel(ctx.status, this.#target(dial.id, ctx));
-        const next = Math.min(3, Math.max(0, (this.#picks.get(dial.id) ?? level) + ticks));
-        this.#picks.set(dial.id, next === level ? undefined : next, () => this.flash(dial.id, "Not sent", "amber"));
+        const option = this.#seat(dial.id, ctx);
+        const current = seatSetting(ctx.status, option.seat);
+        const next = clampSeatSetting(option, (this.#picks.get(dial.id) ?? current) + ticks);
+        this.#picks.set(dial.id, next === current ? undefined : next, () => this.flash(dial.id, "Not sent", "amber"));
     }
 
     protected async press(dial: DialHandle, ctx: CarContext): Promise<void> {
-        const level = this.#picks.get(dial.id);
-        if (level === undefined) {
+        const setting = this.#picks.get(dial.id);
+        if (setting === undefined) {
             this.flash(dial.id, "Turn to choose, then press", "amber");
             return;
         }
 
         this.#picks.clear(dial.id);
-        const target = this.#target(dial.id, ctx);
-        await this.run(dial, ctx, target.mode === "heat" ? "seat_heat" : "seat_vent", { seat: target.seat, level, duration_minutes: ctx.durationMinutes });
+        const seat = this.#seat(dial.id, ctx).seat;
+        for (const step of seatCommands(seat, seatSetting(ctx.status, seat), setting)) {
+            const body = step.level > 0 ? { seat: step.seat, level: step.level, duration_minutes: ctx.durationMinutes } : { seat: step.seat, level: 0 };
+            if (!(await this.run(dial, ctx, step.command, body))) {
+                return;
+            }
+        }
     }
 
     protected tap(dial: DialHandle, ctx: CarContext): void {
         this.#picks.clear(dial.id);
-        this.#targets.set(dial.id, ((this.#targets.get(dial.id) ?? 0) + 1) % seatTargets(ctx.vehicle).length);
+        this.#seats.set(dial.id, ((this.#seats.get(dial.id) ?? 0) + 1) % seatOptions(ctx.vehicle).length);
     }
 
-    #target(id: string, ctx: CarContext) {
-        const targets = seatTargets(ctx.vehicle);
-        return targets[(this.#targets.get(id) ?? 0) % targets.length];
+    #seat(id: string, ctx: CarContext): SeatOption {
+        const options = seatOptions(ctx.vehicle);
+        return options[(this.#seats.get(id) ?? 0) % options.length];
     }
 }
 

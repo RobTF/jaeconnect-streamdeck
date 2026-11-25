@@ -34,6 +34,7 @@ describe("client", () => {
 
     it("tidies the address", () => {
         assert.equal(normaliseBaseUrl(" https://localhost:7180/ "), "https://localhost:7180");
-        assert.equal(normaliseBaseUrl(""), "https://jaeconnect.com");
+        assert.equal(normaliseBaseUrl(""), "https://www.jaeconnect.com");
+        assert.equal(normaliseBaseUrl("https://jaeconnect.com/"), "https://www.jaeconnect.com");
     });
 });
