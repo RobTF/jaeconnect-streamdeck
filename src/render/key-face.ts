@@ -53,6 +53,14 @@ export type KeyFace = {
      * Draws the ring round the key filled this far (0 to 1), for a hold in progress.
      */
     progress?: number;
+    /**
+     * A thin meter under the value, filled to a share (0 to 1), like the website's energy bars.
+     */
+    meter?: { share: number; tone: Tone };
+    /**
+     * Draws the icon this much of its usual size, centred in the same place, for icons that look heavy at full size.
+     */
+    iconScale?: number;
 };
 
 /**
@@ -79,12 +87,21 @@ export function drawKey(face: KeyFace): string {
         '<rect width="144" height="144" fill="#07090a"/>',
         ring,
         face.dot ? `<circle cx="122" cy="22" r="6" fill="${tones[face.dot]}"/>` : "",
-        `<g transform="translate(46 14) scale(2.17)" color="${ink}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${face.icon}</g>`,
+        `<g transform="${iconTransform(face.iconScale ?? 1)}" color="${ink}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${face.icon}</g>`,
         `<text x="72" y="92" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="700" font-size="${size}" fill="${off ? "#5d6664" : face.tone === "grey" ? tones.white : ink}">${escape(face.value)}</text>`,
+        face.meter
+            ? `<rect x="24" y="99" width="96" height="5" rx="2.5" fill="#1d2524"/><rect x="24" y="99" width="${(Math.min(1, Math.max(0, face.meter.share)) * 96).toFixed(1)}" height="5" rx="2.5" fill="${tones[face.meter.tone]}"/>`
+            : "",
         bottom,
         "</svg>",
     ].join("");
     return `data:image/svg+xml;charset=utf8,${encodeURIComponent(svg)}`;
+}
+
+// The 24 × 24 icon drawn 52 px wide, centred at (72, 40); a smaller scale keeps the same centre.
+function iconTransform(scale: number): string {
+    const size = 24 * 2.17 * scale;
+    return `translate(${(72 - size / 2).toFixed(2)} ${(40 - size / 2).toFixed(2)}) scale(${(2.17 * scale).toFixed(4)})`;
 }
 
 /**

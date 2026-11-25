@@ -86,20 +86,40 @@ export function chargingFace(ctx: CarContext): KeyFace {
         return { icon: batteryIcon(0), value: "Battery", sub: "Not reported", tone: "grey" };
     }
 
-    const icon = batteryIcon(percent / 100);
+    // Matches the Fuel key: a white icon and number, so neither reads as a status, and the website's green meter, lit
+    // mint while charging.
+    const live = charging?.state === "charging";
+    const icon = batteryIcon(percent / 100, live);
+    const face = { icon, value: `${percent}%`, tone: "white", meter: { share: percent / 100, tone: live ? "mint" : "electric" } } as const;
     switch (charging?.state) {
         case "charging": {
             const power = charging.power_kw === null ? "Charging" : `${charging.power_kw.toFixed(1)} kW`;
             const time = charging.minutes_to_full === null ? "" : ` · ${hoursMinutes(charging.minutes_to_full)}`;
-            return { icon, value: `${percent}%`, sub: `${power}${time}`, tone: "mint" };
+            return { ...face, sub: `${power}${time}` };
         }
         case "complete":
-            return { icon, value: `${percent}%`, sub: "Full", tone: "mint" };
+            return { ...face, sub: "Full" };
         case "plugged_in":
-            return { icon, value: `${percent}%`, sub: "Plugged in", tone: "white" };
+            return { ...face, sub: "Plugged in" };
         default:
-            return { icon, value: `${percent}%`, sub: distance(ctx.status?.range_km ?? null, ctx.status?.range_miles ?? null, ctx.distance) ?? "Not plugged in", tone: percent < 20 ? "red" : "white" };
+            return { ...face, sub: distance(ctx.status?.range_km ?? null, ctx.status?.range_miles ?? null, ctx.distance) ?? "Not plugged in" };
     }
+}
+
+/**
+ * The Fuel key: fuel level and the range on it, in the website's fuel blue with its pump icon and a meter.
+ * @param ctx The car.
+ * @returns The face.
+ */
+export function fuelFace(ctx: CarContext): KeyFace {
+    const percent = ctx.status?.fuel_percent;
+    if (percent === null || percent === undefined) {
+        return { icon: icons.fuel, value: "Fuel", sub: "Not reported", tone: "grey" };
+    }
+
+    const range = distance(ctx.status?.fuel_range_km ?? null, ctx.status?.fuel_range_miles ?? null, ctx.distance);
+    // The pump fills its box more than the battery does, so it's drawn a touch smaller to look the same size.
+    return { icon: icons.fuel, iconScale: 0.9, value: `${percent}%`, sub: range ?? "Fuel", tone: "white", meter: { share: percent / 100, tone: "fuel" } };
 }
 
 /**

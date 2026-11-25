@@ -59,6 +59,16 @@ export function pluggable(vehicle: Vehicle): boolean {
 }
 
 /**
+ * Whether the car has an engine and so a fuel tank: a plug-in or self-charging hybrid, range extender, or petrol or
+ * diesel car, or a car whose powertrain the service doesn't give. Electric cars don't.
+ * @param vehicle The car.
+ * @returns Whether it does.
+ */
+export function hasEngine(vehicle: Vehicle): boolean {
+    return vehicle.powertrain === null || ["phev", "erev", "hev", "ice"].includes(vehicle.powertrain);
+}
+
+/**
  * The climate control's limits, or jaeconnect's defaults (16–30 °C in whole degrees) when the car doesn't say.
  * @param vehicle The car.
  * @returns The limits.

@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import { drawKey } from "../render/key-face.ts";
 import { testClimate, testContext } from "../test-cars.ts";
-import { carFace, chargingFace, climateFace, demisterFace, lockFace, offlineFace } from "./key-views.ts";
+import { carFace, chargingFace, climateFace, demisterFace, fuelFace, lockFace, offlineFace } from "./key-views.ts";
 
 describe("Lock key", () => {
     it("asks for a hold to unlock", () => {
@@ -42,11 +42,32 @@ describe("Charging key", () => {
         const face = chargingFace(testContext({ battery_percent: 46, charging: { state: "charging", power_kw: 7.2, minutes_to_full: 185, target_percent: 90 } }));
         assert.equal(face.value, "46%");
         assert.equal(face.sub, "7.2 kW · 3h 05m");
-        assert.equal(face.tone, "mint");
+        assert.equal(face.tone, "white");
+        assert.deepEqual(face.meter, { share: 0.46, tone: "mint" });
+        assert.match(face.icon, /#5fe0b4/, "a mint bolt in the battery");
+    });
+
+    it("is white with a green meter, like the Fuel key, when not charging", () => {
+        const face = chargingFace(testContext({ battery_percent: 62, charging: { state: "plugged_in", power_kw: null, minutes_to_full: null, target_percent: 90 } }));
+        assert.equal(face.tone, "white");
+        assert.deepEqual(face.meter, { share: 0.62, tone: "electric" });
     });
 
     it("shows the range when unplugged", () => {
         assert.equal(chargingFace(testContext({ battery_percent: 62, charging: { state: "unplugged", power_kw: null, minutes_to_full: null, target_percent: 90 } })).sub, "52 mi");
+    });
+});
+
+describe("Fuel key", () => {
+    it("shows the level, a meter and the range on fuel", () => {
+        const face = fuelFace(testContext());
+        assert.equal(face.value, "64%");
+        assert.equal(face.sub, "410 mi");
+        assert.deepEqual(face.meter, { share: 0.64, tone: "fuel" });
+    });
+
+    it("says when the car doesn't report fuel", () => {
+        assert.equal(fuelFace(testContext({ fuel_percent: null })).sub, "Not reported");
     });
 });
 

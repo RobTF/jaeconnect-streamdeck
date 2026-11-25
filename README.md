@@ -14,6 +14,7 @@ heated steering wheel shows that key as "Not on this car" instead of a key that 
 | **Lock** (key) | Locked or unlocked | Lock | Hold 1 s: unlock |
 | **Climate** (key) | Off and the temperature it starts at, or the car's set temperature while running | Start at the Climate dial's temperature, or stop | – |
 | **Charging** (key) | Battery %, charger power and time to full, on cars that plug in (not petrol, diesel or self-charging hybrids) | Start or stop charging, on cars with charge control | – |
+| **Fuel** (key) | Fuel %, a meter and the range on fuel, on cars with an engine (not electric cars) | Ask the car for a fresh status | – |
 | **Boot** (key) | Open or shut | Close | Hold 1 s: open |
 | **Demister** (key) | Windscreen or rear window (a setting), on or off | Turn on or off | – |
 | **Heated wheel** (key) | On or off, for cars that have one | Turn on or off | – |

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { ago, clampSeatSetting, clampTemperature, currentPosition, distance, openings, pluggable, positions, pressure, runTime, seatCommands, seatOptions, seatSetting, shortError, sunroofClosesFirst } from "./car.ts";
+import { ago, clampSeatSetting, clampTemperature, currentPosition, distance, hasEngine, openings, pluggable, positions, pressure, runTime, seatCommands, seatOptions, seatSetting, shortError, sunroofClosesFirst } from "./car.ts";
 import { testStatus, testVehicle } from "./test-cars.ts";
 
 describe("climate", () => {
@@ -34,6 +34,18 @@ describe("charging", () => {
     it("hides on petrol, diesel and self-charging hybrids", () => {
         assert.equal(pluggable(testVehicle({ powertrain: "ice" })), false);
         assert.equal(pluggable(testVehicle({ powertrain: "hev" })), false);
+    });
+});
+
+describe("fuel", () => {
+    it("shows on cars with an engine, and on cars that don't say", () => {
+        for (const powertrain of ["phev", "erev", "hev", "ice", null]) {
+            assert.equal(hasEngine(testVehicle({ powertrain })), true, String(powertrain));
+        }
+    });
+
+    it("hides on electric cars", () => {
+        assert.equal(hasEngine(testVehicle({ powertrain: "ev" })), false);
     });
 });
 

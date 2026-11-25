@@ -32,6 +32,15 @@
             "SupportedInMultiActions": false
         },
         {
+            "Name": "Fuel",
+            "UUID": "com.jaeconnect.streamdeck.fuel",
+            "Icon": "imgs/actions/fuel/icon",
+            "Tooltip": "Fuel level and the range on it, for cars with an engine. Press to ask the car for a fresh status.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/fuel/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
             "Name": "Boot",
             "UUID": "com.jaeconnect.streamdeck.boot",
             "Icon": "imgs/actions/boot/icon",

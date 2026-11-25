@@ -28,11 +28,15 @@ export const icons = {
 export type IconName = keyof typeof icons;
 
 /**
- * A battery outline filled to a share, for the Charging key.
+ * A battery outline filled to a share, for the Charging key, with a mint lightning bolt across it while charging.
  * @param share How full, 0 to 1.
+ * @param charging Whether to draw the bolt.
  * @returns The icon's elements.
  */
-export function batteryIcon(share: number): string {
+export function batteryIcon(share: number, charging = false): string {
     const width = Math.max(0.8, Math.min(1, share) * 13);
-    return `<rect x="2" y="7" width="17" height="10" rx="2"/><path d="M21.5 10.5v3"/><rect x="4" y="9" width="${width.toFixed(1)}" height="6" rx="1" fill="currentColor" stroke="none"/>`;
+    const battery = `<rect x="2" y="7" width="17" height="10" rx="2"/><path d="M21.5 10.5v3"/><rect x="4" y="9" width="${width.toFixed(1)}" height="6" rx="1" fill="currentColor" stroke="none"/>`;
+    // The bolt is outlined in the key's background so it stands out over the fill.
+    const bolt = '<path d="M13 2 6.5 13h4.5l-1.5 9 7-11.5h-4.5z" fill="#5fe0b4" stroke="#07090a" stroke-width="1.3" stroke-linejoin="round"/>';
+    return charging ? battery + bolt : battery;
 }

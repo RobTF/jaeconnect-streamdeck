@@ -96,6 +96,7 @@ export const actionFields: Record<string, Field[]> = {
     "com.jaeconnect.streamdeck.lock": [carField],
     "com.jaeconnect.streamdeck.climate": [carField, runTimeField],
     "com.jaeconnect.streamdeck.charging": [carField],
+    "com.jaeconnect.streamdeck.fuel": [carField],
     "com.jaeconnect.streamdeck.boot": [carField],
     "com.jaeconnect.streamdeck.demister": [
         carField,

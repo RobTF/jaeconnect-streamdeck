@@ -2,13 +2,13 @@ import { action } from "@elgato/streamdeck";
 
 import type { CommandName, Vehicle } from "../api/types.ts";
 import type { CarContext } from "../car.ts";
-import { pluggable, supports } from "../car.ts";
+import { hasEngine, pluggable, supports } from "../car.ts";
 import { hub } from "../hub.ts";
 import { icons } from "../render/icons.ts";
 import type { KeyFace } from "../render/key-face.ts";
 import type { ActionSettings } from "../settings.ts";
 import { CarKey, type KeyHandle } from "./car-key.ts";
-import { bootFace, carFace, chargingFace, climateFace, demisterFace, lockFace, signalFace, wheelFace } from "./key-views.ts";
+import { bootFace, carFace, chargingFace, climateFace, demisterFace, fuelFace, lockFace, signalFace, wheelFace } from "./key-views.ts";
 
 /**
  * Locked or unlocked. A press locks; unlocking needs a one-second hold.
@@ -110,6 +110,37 @@ export class ChargingKey extends CarKey {
             default:
                 this.hint(key, "Not plugged in");
                 break;
+        }
+    }
+}
+
+/**
+ * Fuel level and the range on it, for cars with an engine. A press asks the car for a fresh status.
+ */
+@action({ UUID: "com.jaeconnect.streamdeck.fuel" })
+export class FuelKey extends CarKey {
+    protected readonly name = "Fuel";
+    protected readonly icon = icons.fuel;
+    protected readonly commands: CommandName[] = [];
+
+    constructor() {
+        super();
+    }
+
+    protected override supported(vehicle: Vehicle): boolean {
+        return hasEngine(vehicle);
+    }
+
+    protected face(ctx: CarContext): KeyFace {
+        return fuelFace(ctx);
+    }
+
+    protected async press(key: KeyHandle, ctx: CarContext): Promise<void> {
+        try {
+            await hub.refresh(ctx.vehicle.id, true);
+            await key.showOk();
+        } catch {
+            await key.showAlert();
         }
     }
 }

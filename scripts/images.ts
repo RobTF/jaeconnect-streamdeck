@@ -11,6 +11,7 @@ const actions: { slug: string; icon: IconName; dial?: boolean }[] = [
     { slug: "lock", icon: "lockClosed" },
     { slug: "climate", icon: "fan" },
     { slug: "charging", icon: "bolt" },
+    { slug: "fuel", icon: "fuel" },
     { slug: "boot", icon: "bootOpen" },
     { slug: "demister", icon: "windscreen" },
     { slug: "wheel", icon: "wheel" },
