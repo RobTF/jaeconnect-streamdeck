@@ -1,0 +1,177 @@
+{
+    "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+    "Name": "jaeconnect",
+    "Version": "0.1.0.0",
+    "Author": "jaeconnect",
+    "Actions": [
+        {
+            "Name": "Lock",
+            "UUID": "com.jaeconnect.streamdeck.lock",
+            "Icon": "imgs/actions/lock/icon",
+            "Tooltip": "Shows whether the car is locked. Press to lock; hold for a second to unlock.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/lock/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Climate",
+            "UUID": "com.jaeconnect.streamdeck.climate",
+            "Icon": "imgs/actions/climate/icon",
+            "Tooltip": "Shows whether climate is on. Press to start it at the Climate dial's temperature, or to stop it.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/climate/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Charging",
+            "UUID": "com.jaeconnect.streamdeck.charging",
+            "Icon": "imgs/actions/charging/icon",
+            "Tooltip": "Battery percent, charger power and time to full. Press to start or stop charging.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/charging/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Boot",
+            "UUID": "com.jaeconnect.streamdeck.boot",
+            "Icon": "imgs/actions/boot/icon",
+            "Tooltip": "Shows whether the powered boot is open. Hold for a second to open it; press to close it.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/boot/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Demister",
+            "UUID": "com.jaeconnect.streamdeck.demister",
+            "Icon": "imgs/actions/demister/icon",
+            "Tooltip": "The windscreen or rear window demister (choose in settings). Press to turn it on or off.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/demister/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Heated wheel",
+            "UUID": "com.jaeconnect.streamdeck.wheel",
+            "Icon": "imgs/actions/wheel/icon",
+            "Tooltip": "The heated steering wheel, on cars that have one. Press to turn it on or off.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/wheel/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Signal",
+            "UUID": "com.jaeconnect.streamdeck.signal",
+            "Icon": "imgs/actions/signal/icon",
+            "Tooltip": "Flashes the lights and sounds the horn (or both, depending on the car).",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/signal/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Car",
+            "UUID": "com.jaeconnect.streamdeck.car",
+            "Icon": "imgs/actions/car/icon",
+            "Tooltip": "The car's name, whether it's awake and when it last reported. Press to ask the car for a fresh status; hold to wake it.",
+            "Controllers": ["Keypad"],
+            "States": [{ "Image": "imgs/actions/car/key", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Climate dial",
+            "UUID": "com.jaeconnect.streamdeck.climate-dial",
+            "Icon": "imgs/actions/climate-dial/icon",
+            "Tooltip": "The temperature climate starts at, shared with the Climate key. Turn to set it; press to start or stop climate; tap to change the run time.",
+            "Controllers": ["Encoder"],
+            "Encoder": {
+                "layout": "layouts/panel.json",
+                "Icon": "imgs/actions/climate-dial/dial",
+                "TriggerDescription": {
+                    "Rotate": "Set the temperature",
+                    "Push": "Start or stop climate",
+                    "Touch": "Change the run time"
+                }
+            },
+            "States": [{ "Image": "imgs/actions/climate-dial/dial", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Seats dial",
+            "UUID": "com.jaeconnect.streamdeck.seats-dial",
+            "Icon": "imgs/actions/seats-dial/icon",
+            "Tooltip": "Seat heating and cooling. Turn to choose a level, then press to send it; tap for the next seat.",
+            "Controllers": ["Encoder"],
+            "Encoder": {
+                "layout": "layouts/panel.json",
+                "Icon": "imgs/actions/seats-dial/dial",
+                "TriggerDescription": {
+                    "Rotate": "Choose a level (not sent yet)",
+                    "Push": "Send the level",
+                    "Touch": "Next seat, heating then cooling"
+                }
+            },
+            "States": [{ "Image": "imgs/actions/seats-dial/dial", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Energy dial",
+            "UUID": "com.jaeconnect.streamdeck.energy-dial",
+            "Icon": "imgs/actions/energy-dial/icon",
+            "Tooltip": "Battery, fuel, tyres and odometer. Turn or tap to move between them; press to ask the car for a fresh status.",
+            "Controllers": ["Encoder"],
+            "Encoder": {
+                "layout": "layouts/panel.json",
+                "Icon": "imgs/actions/energy-dial/dial",
+                "TriggerDescription": {
+                    "Rotate": "Battery, fuel, tyres, odometer",
+                    "Push": "Ask the car for a fresh status",
+                    "Touch": "Next page"
+                }
+            },
+            "States": [{ "Image": "imgs/actions/energy-dial/dial", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        },
+        {
+            "Name": "Windows and sunroof dial",
+            "UUID": "com.jaeconnect.streamdeck.openings-dial",
+            "Icon": "imgs/actions/openings-dial/icon",
+            "Tooltip": "Windows and sunroof. Turn to choose closed, vented or open, then press to send it; tap to switch between windows and sunroof.",
+            "Controllers": ["Encoder"],
+            "Encoder": {
+                "layout": "layouts/panel.json",
+                "Icon": "imgs/actions/openings-dial/dial",
+                "TriggerDescription": {
+                    "Rotate": "Choose a position (not sent yet)",
+                    "Push": "Send the position",
+                    "Touch": "Switch windows and sunroof"
+                }
+            },
+            "States": [{ "Image": "imgs/actions/openings-dial/dial", "ShowTitle": false }],
+            "SupportedInMultiActions": false
+        }
+    ],
+    "Category": "jaeconnect",
+    "CategoryIcon": "imgs/plugin/category",
+    "CodePath": "bin/plugin.js",
+    "PropertyInspectorPath": "ui/settings.html",
+    "Description": "Your car on your Stream Deck+, through jaeconnect: locks, climate, charging, seats, windows and more, with live status.",
+    "Icon": "imgs/plugin/marketplace",
+    "SDKVersion": 3,
+    "Software": {
+        "MinimumVersion": "7.1"
+    },
+    "OS": [
+        {
+            "Platform": "windows",
+            "MinimumVersion": "10"
+        },
+        {
+            "Platform": "mac",
+            "MinimumVersion": "13"
+        }
+    ],
+    "Nodejs": {
+        "Version": "24",
+        "Debug": "enabled"
+    },
+    "UUID": "com.jaeconnect.streamdeck"
+}

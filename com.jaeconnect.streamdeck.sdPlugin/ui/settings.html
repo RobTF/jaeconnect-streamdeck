@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>jaeconnect</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            padding: 4px 12px 12px;
+            background: #2d2d2d;
+            color: #d8d8d8;
+            font: 9pt "Segoe UI", sans-serif;
+        }
+
+        h3 {
+            margin: 14px 0 6px;
+            color: #9a9a9a;
+            font-size: 8pt;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        select,
+        input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 4px;
+            border: none;
+            border-radius: 3px;
+            background: #3d3d3d;
+            color: inherit;
+            font: inherit;
+        }
+
+        .help {
+            margin: 2px 0 6px 118px;
+            color: #9a9a9a;
+        }
+
+        #status {
+            margin: 10px 0 4px 118px;
+        }
+
+        #status b {
+            color: #5fe0b4;
+        }
+
+        #status b.off {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div id="fields"></div>
+    <div id="global"></div>
+    <div id="status"></div>
+
+    <script>
+        /*
+         * One settings page for every jaeconnect action. The plugin owns the fields (src/settings.ts): this page asks
+         * for its action's fields, the plugin-wide ones and the cars and run times to offer, draws them, and saves each
+         * change at once. The access token is saved in the plugin-wide settings, which Stream Deck keeps on this
+         * computer.
+         */
+        let socket;
+        let context;
+        let actionId;
+        let settings = {};
+        let globals = {};
+        let schema;
+        let connected;
+
+        // Stream Deck calls this when the settings page opens.
+        function connectElgatoStreamDeckSocket(port, uuid, registerEvent, info, actionInfo) {
+            const action = JSON.parse(actionInfo);
+            context = uuid;
+            actionId = action.action;
+            settings = action.payload.settings ?? {};
+
+            socket = new WebSocket(`ws://127.0.0.1:${port}`);
+            socket.addEventListener("open", () => {
+                send({ event: registerEvent, uuid });
+                send({ event: "getGlobalSettings", context });
+                askSchema();
+                setInterval(() => ask({ type: "status" }), 2000);
+            });
+            socket.addEventListener("message", (event) => {
+                const message = JSON.parse(event.data);
+                if (message.event === "didReceiveGlobalSettings") {
+                    globals = message.payload.settings ?? {};
+                    draw();
+                } else if (message.event === "sendToPropertyInspector" && message.payload?.type === "schema") {
+                    schema = message.payload;
+                    connected = message.payload.status.connected;
+                    draw();
+                    status(message.payload.status);
+                } else if (message.event === "sendToPropertyInspector" && message.payload?.type === "status") {
+                    // Signing in fills the car list, so ask for the fields again when the connection changes.
+                    if (message.payload.status.connected !== connected) {
+                        connected = message.payload.status.connected;
+                        askSchema();
+                    }
+
+                    status(message.payload.status);
+                }
+            });
+        }
+
+        function send(message) {
+            socket.send(JSON.stringify(message));
+        }
+
+        function ask(payload) {
+            send({ event: "sendToPlugin", action: actionId, context, payload });
+        }
+
+        function askSchema() {
+            ask({ type: "schema", vehicleId: settings.vehicleId ?? "" });
+        }
+
+        function draw() {
+            if (!schema) {
+                return;
+            }
+
+            render(document.getElementById("fields"), schema.fields, settings, (next) => {
+                const carChanged = next.vehicleId !== settings.vehicleId;
+                settings = next;
+                send({ event: "setSettings", context, payload: settings });
+                if (carChanged) {
+                    askSchema();
+                }
+            });
+            render(document.getElementById("global"), schema.globalFields, globals, (next) => {
+                globals = next;
+                send({ event: "setGlobalSettings", context, payload: globals });
+            });
+        }
+
+        function render(container, fields, values, save) {
+            // Leave a field alone while it's being typed in, so a redraw doesn't lose the caret.
+            if (container.contains(document.activeElement) && document.activeElement.tagName === "INPUT") {
+                return;
+            }
+
+            container.replaceChildren(...fields.map((field) => element(field, values, save)));
+        }
+
+        function element(field, values, save) {
+            const set = (value) => save({ ...values, [field.key]: value });
+            const current = values[field.key] ?? field.default ?? "";
+
+            if (field.kind === "heading") {
+                const h = document.createElement("h3");
+                h.textContent = field.label;
+                return h;
+            }
+
+            const wrap = document.createElement("div");
+            const row = document.createElement("div");
+            row.className = "row";
+            const caption = document.createElement("label");
+            caption.textContent = field.label;
+            caption.htmlFor = `f-${field.key}`;
+            row.append(caption);
+
+            if (field.kind === "select") {
+                const select = document.createElement("select");
+                select.id = `f-${field.key}`;
+                const choices = typeof field.options === "string" ? schema.names[field.options] ?? [] : field.options;
+                select.append(...choices.map((x) => new Option(x.label, x.value)));
+                if (current !== "" && !choices.some((x) => x.value === String(current))) {
+                    select.append(new Option(`${current} (not available)`, String(current)));
+                }
+
+                select.value = String(current);
+                select.addEventListener("change", () => set(select.value));
+                row.append(select);
+            } else {
+                const input = document.createElement("input");
+                input.id = `f-${field.key}`;
+                input.type = field.kind === "secret" ? "password" : "text";
+                input.autocomplete = "off";
+                input.spellcheck = false;
+                input.placeholder = field.placeholder ?? "";
+                input.value = current;
+                input.addEventListener("change", () => set(input.value.trim()));
+                row.append(input);
+            }
+
+            wrap.append(row);
+            if (field.help) {
+                const help = document.createElement("div");
+                help.className = "help";
+                help.textContent = field.help;
+                wrap.append(help);
+            }
+
+            return wrap;
+        }
+
+        function status(value) {
+            if (!value) {
+                return;
+            }
+
+            const line = document.getElementById("status");
+            const state = document.createElement("b");
+            state.textContent = value.state;
+            state.className = value.connected ? "" : "off";
+            line.replaceChildren(state, document.createTextNode(` · ${value.detail}`));
+        }
+    </script>
+</body>
+</html>

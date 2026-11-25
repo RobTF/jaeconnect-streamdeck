@@ -1,0 +1,33 @@
+{
+    "name": "jaeconnect-streamdeck",
+    "private": true,
+    "description": "jaeconnect for Stream Deck: your car's locks, climate, charging and more on a Stream Deck+, live from jaeconnect.",
+    "license": "MIT",
+    "scripts": {
+        "build": "rollup -c",
+        "watch": "rollup -c -w --watch.onEnd=\"node scripts/deploy.mjs\"",
+        "test": "node --test \"src/**/*.test.ts\"",
+        "typecheck": "tsc --noEmit",
+        "images": "node scripts/images.ts",
+        "validate": "streamdeck validate com.jaeconnect.streamdeck.sdPlugin",
+        "restart": "streamdeck restart com.jaeconnect.streamdeck",
+        "pack": "npm run build && streamdeck pack com.jaeconnect.streamdeck.sdPlugin --output dist --force",
+        "deploy": "npm run build && node scripts/deploy.mjs"
+    },
+    "type": "module",
+    "devDependencies": {
+        "@elgato/cli": "1.10.2",
+        "@rollup/plugin-commonjs": "^29.0.2",
+        "@rollup/plugin-node-resolve": "^15.2.2",
+        "@rollup/plugin-terser": "^1.0.0",
+        "@rollup/plugin-typescript": "^12.1.0",
+        "@tsconfig/node20": "^20.1.2",
+        "@types/node": "~24.1.0",
+        "rollup": "^4.0.2",
+        "tslib": "^2.6.2",
+        "typescript": "^5.2.2"
+    },
+    "dependencies": {
+        "@elgato/streamdeck": "3.0.2"
+    }
+}
